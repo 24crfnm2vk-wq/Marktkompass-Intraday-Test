@@ -21,7 +21,7 @@ jobs:
           ! grep -q 'method: "PUT"' worker-intraday-test.js
           ! grep -q 'method: "POST"' worker-intraday-test.js
           ! grep -q 'dispatchPublishWorkflow' worker-intraday-test.js
-          grep -q 'market["^VIX"]' worker-intraday-test.js
+          grep -Fq 'market["^VIX"]' worker-intraday-test.js
       - name: Create ZIP package
         run: |
           mkdir -p package
