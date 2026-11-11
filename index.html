@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Marktkompass – Intraday-Testversion</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="container">
+    <h1>Marktkompass – Testversion</h1>
+    <p class="note"><b>Getrennte Online-Testseite.</b> Diese Fassung liest den veröffentlichten Marktstatus und fragt einen aktuellen Intraday-VIX-Kandidaten nur lesend ab. Sie löst keine ACWI-Übernahme, Berechnung oder Veröffentlichung aus.</p>
+    <div id="app">Lade den letzten veröffentlichten Marktstatus …</div>
+    <section class="card">
+      <h2>Intraday-VIX – Live-Abfrage (nur lesend)</h2>
+      <button id="intraday-preview-button" type="button">Intraday-VIX jetzt prüfen</button>
+      <div id="intraday-preview-status" class="note" aria-live="polite">Beim Öffnen wird eine unverbindliche Leseabfrage gestartet.</div>
+      <div id="intraday-preview-data"></div>
+      <p class="note">Ein angezeigter Kandidat ist noch nicht in die V25.1-Berechnung übernommen. Die reguläre gemeinsame ACWI-/VIX-Schlusskursveröffentlichung hat weiterhin Vorrang.</p>
+    </section>
+    <p class="note">Informations- und Beobachtungsinstrument – kein Kauf- oder Verkaufssignal. Die Testversion ist nicht die produktive Marktkompass-Seite.</p>
+  </main>
+  <script src="app.js"></script>
+  <script src="intraday-preview.js"></script>
+</body>
+</html>
