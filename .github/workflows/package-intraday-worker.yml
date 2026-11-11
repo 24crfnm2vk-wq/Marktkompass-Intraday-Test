@@ -1,0 +1,45 @@
+name: Package isolated Intraday test worker
+on:
+  push:
+    branches: [main]
+    paths:
+      - "worker-intraday-test.js"
+      - ".github/workflows/package-intraday-worker.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: write
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check JavaScript syntax
+        run: node --check worker-intraday-test.js
+      - name: Verify read-only restrictions
+        run: |
+          ! grep -q 'method: "PUT"' worker-intraday-test.js
+          ! grep -q 'method: "POST"' worker-intraday-test.js
+          ! grep -q 'dispatchPublishWorkflow' worker-intraday-test.js
+          grep -q 'market["^VIX"]' worker-intraday-test.js
+      - name: Create ZIP package
+        run: |
+          mkdir -p package
+          cp worker-intraday-test.js package/worker-intraday-test.js
+          cat > package/LESE-MICH.txt <<'EOF'
+          Marktkompass – isolierter Intraday-Test-Worker
+
+          Datei: worker-intraday-test.js
+          Zweck: Nur lesender Intraday-VIX-Kandidatentest.
+          Schreibzugriff: ausschließlich auf das separate Cloudflare-Test-KV (INTRADAY_CACHE).
+          Keine ACWI-Freigabe, keine GitHub-Dateiänderung, kein Workflow-Dispatch.
+          Vor Verwendung: Cloudflare-Secrets GITHUB_APP_ID und GITHUB_APP_PRIVATE_KEY
+          sowie das KV-Binding INTRADAY_CACHE im NEUEN Test-Worker einrichten.
+          Den produktiven Worker bitter-mountain-11f4 nicht ändern.
+          EOF
+          cd package && zip -r ../Marktkompass_Intraday_Test_Worker.zip .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Marktkompass_Intraday_Test_Worker
+          path: Marktkompass_Intraday_Test_Worker.zip
+          retention-days: 7
