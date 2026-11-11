@@ -1,5 +1,5 @@
 (() => {
-  const WORKER = "https://bitter-mountain-11f4.24crfnm2vk.workers.dev";
+  const WORKER = "https://marktkompass-intraday-test.24crfnm2vk.workers.dev";
   const status = document.getElementById("intraday-preview-status");
   const data = document.getElementById("intraday-preview-data");
 
@@ -10,7 +10,7 @@
       const response = await fetch(`${WORKER}/intraday-candidate?t=${Date.now()}`, { cache: "no-store" });
       const candidate = await response.json().catch(() => null);
       if (!response.ok) throw new Error(candidate?.error || `HTTP ${response.status}`);
-      if (candidate?.version !== "intraday-vix-candidate-v1") throw new Error("Unerwartetes Antwortformat.");
+      if (candidate?.version !== "intraday-vix-test-candidate-v1") throw new Error("Unerwartetes Antwortformat.");
       if (candidate.available !== true) {
         status.textContent = candidate.message || "Derzeit ist kein Intraday-Kandidat verfügbar. Möglicherweise hat der reguläre Schlusskurs Vorrang.";
         return;
