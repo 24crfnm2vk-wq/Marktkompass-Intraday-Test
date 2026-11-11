@@ -37,6 +37,12 @@ export default {
       }
       const cache = await readIntradayStartCache(env);
       const now = Date.now();
+      const cachedTimestampMs = Date.parse(cache?.candidate?.timestamp || "");
+      const cachedTimestampAgeMs = now - cachedTimestampMs;
+      const cachedCandidateFresh =
+        Number.isFinite(cachedTimestampMs) &&
+        cachedTimestampAgeMs >= -2 * 60 * 1000 &&
+        cachedTimestampAgeMs <= 30 * 60 * 1000;
       const cacheMatches =
         cache?.version === "intraday-vix-test-cache-v1" &&
         cache.latestAcwiDate === state.latestAcwiDate &&
@@ -44,7 +50,8 @@ export default {
         Number.isFinite(Number(cache.checkedAt)) &&
         now - Number(cache.checkedAt) >= 0 &&
         now - Number(cache.checkedAt) < INTRADAY_COOLDOWN_MS &&
-        cache.candidate?.acwiDate === state.latestAcwiDate;
+        cache.candidate?.acwiDate === state.latestAcwiDate &&
+        cachedCandidateFresh;
       let candidate;
       if (cacheMatches) {
         candidate = cache.candidate;
