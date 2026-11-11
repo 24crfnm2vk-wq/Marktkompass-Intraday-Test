@@ -10,7 +10,7 @@ const PHASES = {
   'STABILISIERUNG': { color: 'yellow', label: 'GELB', title: 'STABILISIERUNG', description: 'Der Markt zeigt erste Anzeichen einer Stabilisierung. Ein vergleichbarer historischer Verlauf dient als Orientierung, sofern vorhanden.' },
   'ERSTE VERBESSERUNG': { color: 'yellow', label: 'GELB', title: 'ERSTE VERBESSERUNG', description: 'Die Entwicklung verbessert sich, die Erholung ist aber noch nicht bestätigt.' },
   'STRUKTURELLE VERBESSERUNG': { color: 'yellow', label: 'GELB', title: 'STRUKTURELLE VERBESSERUNG', description: 'Die Verbesserung ist struktureller; die bestätigte Erholung ist noch nicht erreicht.' },
-  'ERHOLUNG BESTÄTIGT': { color: 'blue', label: 'BLAU', title: 'ERHOLUNG BESTÄTIGT', description: 'Die vereinbarten Kriterien für eine bestätigte Erholung sind erfüllt.' },
+  'ERHOLUNG BESTÄTIGT': { color: 'blue', label: 'BLAU', title: 'ERHOLUNG BESTÄTIGT', description: 'Die Erholung ist bestätigt.' },
   'STRESS': { color: 'red', label: 'ROT', title: 'STRESS', description: 'Erkannte Stressphase. Ein vergleichbarer historischer Verlauf wird angezeigt, sofern vorhanden.' },
   'STRESS HOCH': { color: 'red', label: 'ROT', title: 'STRESS HOCH', description: 'Erhöhte Stressintensität. Ein vergleichbarer historischer Verlauf wird angezeigt, sofern vorhanden.' },
   'STRESS EXTREM': { color: 'red', label: 'ROT', title: 'STRESS EXTREM', description: 'Extreme Stressintensität. Ein vergleichbarer historischer Verlauf wird angezeigt, sofern vorhanden.' },
