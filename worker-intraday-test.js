@@ -85,7 +85,7 @@ export default {
 
 function corsHeaders() {
   return {
-    "Access-Control-Allow-Origin": "https://24crfnm2vk.github.io",
+    "Access-Control-Allow-Origin": "https://24crfnm2vk-wq.github.io",
     "Access-Control-Allow-Methods": "GET,OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type"
   };
