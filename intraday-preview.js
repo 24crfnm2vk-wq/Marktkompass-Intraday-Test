@@ -31,7 +31,10 @@
       data.append(table);
       status.textContent = "Live-Abfrage erfolgreich. Dieser Wert wurde nur gelesen und NICHT berechnet oder veröffentlicht.";
     } catch (error) {
-      status.textContent = "Live-Abfrage derzeit nicht möglich: " + (error instanceof Error ? error.message : String(error));
+      const detail = error instanceof Error ? error.message : String(error);
+      status.textContent = /HTTP 404|Not found/i.test(detail)
+        ? "Intraday-Abfrage noch nicht freigeschaltet. Der zugehörige Cloudflare-Worker wird derzeit vorbereitet."
+        : "Live-Abfrage derzeit nicht möglich: " + detail;
     } finally {
     }
   }
