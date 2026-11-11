@@ -1,0 +1,25 @@
+body{font-family:Arial,sans-serif;background:#f5f5f5;margin:0;color:#222}
+.container{max-width:720px;margin:40px auto;padding:28px;background:#fff;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+h1{margin-top:0}
+.card{padding:18px;border:1px solid #ddd;border-radius:10px;margin:16px 0}
+.traffic{font-size:1.15rem;font-weight:700;margin:12px 0}
+.dot{display:inline-block;width:18px;height:18px;border-radius:50%;vertical-align:-3px;margin-right:8px}
+.green{background:#2e8b57}.yellow{background:#e0b400}.red{background:#c62828}.gray{background:#888}
+.row{margin:8px 0}.label{font-weight:700}
+.note{font-size:.9rem;color:#666;margin-top:22px}
+.error{color:#b00020}
+
+*{box-sizing:border-box}
+body{line-height:1.45}
+.phase-banner{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid #e6e6e6}
+.phase-icon{width:44px;height:44px;min-width:44px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff}
+.phase-icon svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.phase-green{background:#279653}.phase-yellow{background:#e6b422;color:#242424}.phase-blue{background:#2878b5}.phase-red{background:#c83b3b}.phase-gray{background:#888}
+.phase-title{font-weight:700;margin:0 0 3px}.phase-description{margin:0;color:#333}.phase-label{font-size:.83rem;font-weight:700;letter-spacing:.03em;color:#666;margin-bottom:3px}
+@media(max-width:600px){.container{margin:0;padding:16px;border-radius:0}.phase-banner{gap:10px}.phase-icon{width:40px;height:40px;min-width:40px}}
+
+.vix-chart{display:block;width:100%;height:auto;margin-top:12px;overflow:visible}
+.chart-legend{display:flex;flex-wrap:wrap;gap:14px;margin:10px 0 6px;font-size:.82rem;color:#555}
+.chart-legend span{display:inline-flex;align-items:center;gap:6px}
+.chart-legend i{display:inline-block;width:17px;height:3px;background:#555;border-radius:2px}
+.chart-legend .legend-intraday{width:9px;height:9px;border:2px solid #222;border-radius:50%;background:#888}
