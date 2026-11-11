@@ -1,11 +1,9 @@
 (() => {
   const WORKER = "https://bitter-mountain-11f4.24crfnm2vk.workers.dev";
-  const button = document.getElementById("intraday-preview-button");
   const status = document.getElementById("intraday-preview-status");
   const data = document.getElementById("intraday-preview-data");
 
   async function check() {
-    button.disabled = true;
     status.textContent = "Lese aktuellen Intraday-Kandidaten …";
     data.replaceChildren();
     try {
@@ -35,9 +33,7 @@
     } catch (error) {
       status.textContent = "Live-Abfrage derzeit nicht möglich: " + (error instanceof Error ? error.message : String(error));
     } finally {
-      button.disabled = false;
     }
   }
-  button.addEventListener("click", check);
   check();
 })();
