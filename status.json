@@ -1,0 +1,22 @@
+{
+  "version": "V25.1.0",
+  "date": "2026-11-09",
+  "trafficLight": "GRÜN",
+  "state": "ERHOLUNG BESTÄTIGT",
+  "acwi": 1108.961379,
+  "sma200": 1095.35813851,
+  "distance": 1.2418988832734181,
+  "vix": 19.92,
+  "vixChange": -22.308892355694223,
+  "historicalReference": {
+    "found": true,
+    "date": "2025-03-12",
+    "stressStart": "2025-03-10",
+    "stressLevel": -13.029432878679106,
+    "acwiChangeSinceStart": -0.22576345273978304,
+    "distanceToSma200": -0.6524165431274358,
+    "vix": 24.23,
+    "startDate": "2025-03-10",
+    "endDate": "2025-03-17"
+  }
+}
