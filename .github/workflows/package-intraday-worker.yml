@@ -18,9 +18,13 @@ jobs:
         run: node --check worker-intraday-test.js
       - name: Verify read-only restrictions
         run: |
-          ! grep -q 'method: "PUT"' worker-intraday-test.js
-          ! grep -q 'method: "POST"' worker-intraday-test.js
-          ! grep -q 'dispatchPublishWorkflow' worker-intraday-test.js
+          # GitHub App installation tokens require one POST request.
+          # This request grants contents:read only; it does not write repository data.
+          test "$(grep -c 'method: "POST"' worker-intraday-test.js)" -eq 1
+          grep -Fq '/access_tokens' worker-intraday-test.js
+          grep -Fq 'permissions: { contents: "read" }' worker-intraday-test.js
+          ! grep -Eq 'dispatchPublishWorkflow|workflow_dispatch' worker-intraday-test.js
+          ! grep -Eq 'method: "(PUT|PATCH|DELETE)"' worker-intraday-test.js
           grep -Fq 'market["^VIX"]' worker-intraday-test.js
       - name: Create ZIP package
         run: |
