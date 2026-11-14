@@ -266,7 +266,7 @@ async function getChartHistory(env) {
   }
 
   const parseCsv = (text, label) => {
-    const lines = base64ToUtf8(text).split(/\\r?\\n/).map(line => line.trim()).filter(Boolean);
+    const lines = base64ToUtf8(text).split(/\r?\n/).map(line => line.trim()).filter(Boolean);
     if (lines.shift() !== "date;close") throw new Error(`Ungültiges CSV-Format in ${label}.`);
     const rows = [];
     const seen = new Set();
