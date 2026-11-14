@@ -13,6 +13,9 @@ const INTRADAY_CACHE_TTL_SECONDS = 15 * 60;
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: corsHeaders() });
+    }
     if (request.method !== "GET") return json({ error: "Method not allowed" }, 405);
     if (url.pathname === "/health") {
       return json({ ok: true, worker: "marktkompass-intraday-test", mode: "read-only" });
@@ -209,10 +212,6 @@ async function getIntradayMarketState(env) {
     !Number.isFinite(Number(status.acwi)) ||
     Number(status.acwi) !== Number(latestAcwiClose);
 
-  // Intraday wird gesperrt, solange der freigegebene ACWI-Stand noch nicht
-  // veröffentlicht ist oder bereits ein regulärer gemeinsamer Schlusskurs
-  // für genau diesen jüngsten ACWI-Datensatz vorliegt.
-  const blocked = publicationPending || regularCloseAtLatestAcwi;
   const latestCommonVix = latestCommonDate
     ? vixDates.get(latestCommonDate)
     : null;
@@ -222,11 +221,18 @@ async function getIntradayMarketState(env) {
     Number(status.vix) === Number(latestCommonVix) &&
     Number(status.acwi) === Number(acwiDates.get(latestCommonDate));
 
+  // Ein regulärer gemeinsamer Schlusskurs hat Vorrang, solange er noch
+  // nicht im veröffentlichten Status angekommen ist. Ist er bereits
+  // veröffentlicht, darf ein späterer Intraday-Messpunkt denselben letzten
+  // ACWI-Stand ergänzen (z. B. am Wochenende oder Feiertag).
+  const regularRefreshRequired =
+    regularCloseAtLatestAcwi && !regularAlreadyPublished;
+  const blocked = publicationPending || regularRefreshRequired;
+
   return {
     blocked,
     publicationPending,
-    regularRefreshRequired:
-      !publicationPending && regularCloseAtLatestAcwi && !regularAlreadyPublished,
+    regularRefreshRequired,
     latestAcwiDate,
     latestAcwiClose,
     latestCommonDate,
