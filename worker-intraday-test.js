@@ -13,9 +13,24 @@ const INTRADAY_CACHE_TTL_SECONDS = 15 * 60;
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: corsHeaders() });
+    }
     if (request.method !== "GET") return json({ error: "Method not allowed" }, 405);
     if (url.pathname === "/health") {
       return json({ ok: true, worker: "marktkompass-intraday-test", mode: "read-only" });
+    }
+    if (url.pathname === "/chart-history") {
+      try {
+        return json(await getChartHistory(env));
+      } catch (error) {
+        console.error(error);
+        return json({
+          version: "intraday-vix-chart-history-v1",
+          available: false,
+          error: error instanceof Error ? error.message : String(error)
+        }, 500);
+      }
     }
     if (url.pathname !== "/intraday-candidate") return json({ error: "Not found" }, 404);
     try {
@@ -209,10 +224,6 @@ async function getIntradayMarketState(env) {
     !Number.isFinite(Number(status.acwi)) ||
     Number(status.acwi) !== Number(latestAcwiClose);
 
-  // Intraday wird gesperrt, solange der freigegebene ACWI-Stand noch nicht
-  // veröffentlicht ist oder bereits ein regulärer gemeinsamer Schlusskurs
-  // für genau diesen jüngsten ACWI-Datensatz vorliegt.
-  const blocked = publicationPending || regularCloseAtLatestAcwi;
   const latestCommonVix = latestCommonDate
     ? vixDates.get(latestCommonDate)
     : null;
@@ -222,16 +233,100 @@ async function getIntradayMarketState(env) {
     Number(status.vix) === Number(latestCommonVix) &&
     Number(status.acwi) === Number(acwiDates.get(latestCommonDate));
 
+  // Ein regulärer gemeinsamer Schlusskurs hat Vorrang, solange er noch
+  // nicht im veröffentlichten Status angekommen ist. Ist er bereits
+  // veröffentlicht, darf ein späterer Intraday-Messpunkt denselben letzten
+  // ACWI-Stand ergänzen (z. B. am Wochenende oder Feiertag).
+  const regularRefreshRequired =
+    regularCloseAtLatestAcwi && !regularAlreadyPublished;
+  const blocked = publicationPending || regularRefreshRequired;
+
   return {
     blocked,
     publicationPending,
-    regularRefreshRequired:
-      !publicationPending && regularCloseAtLatestAcwi && !regularAlreadyPublished,
+    regularRefreshRequired,
     latestAcwiDate,
     latestAcwiClose,
     latestCommonDate,
     latestCommonVix,
     status
+  };
+}
+
+async function getChartHistory(env) {
+  const ACWI_MASTER_PATH = "data/market-data/msci_acwi_daily_clean.csv";
+  const VIX_MASTER_PATH = "data/market-data/vix_daily_clean.csv";
+  const [acwiFile, vixFile, approvedUpdates] = await Promise.all([
+    githubGetFileWithSha(env, ACWI_MASTER_PATH),
+    githubGetFileWithSha(env, VIX_MASTER_PATH),
+    readApprovedAcwiUpdates(env)
+  ]);
+  if (!acwiFile || !vixFile) {
+    throw new Error("Reguläre ACWI-/VIX-Masterdaten fehlen.");
+  }
+
+  const parseCsv = (text, label) => {
+    const lines = base64ToUtf8(text).split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+    if (lines.shift() !== "date;close") throw new Error(`Ungültiges CSV-Format in ${label}.`);
+    const rows = [];
+    const seen = new Set();
+    let previousDate = null;
+    for (const line of lines) {
+      const parts = line.split(";");
+      const date = parts[0];
+      const close = Number(parts[1]);
+      if (parts.length !== 2 || !isValidIsoDate(date) || !Number.isFinite(close) || close <= 0 ||
+          seen.has(date) || (previousDate !== null && date <= previousDate)) {
+        throw new Error(`Ungültiger oder unsortierter Datensatz in ${label}.`);
+      }
+      rows.push({ date, close });
+      seen.add(date);
+      previousDate = date;
+    }
+    return rows;
+  };
+
+  const acwiRows = parseCsv(acwiFile.content, ACWI_MASTER_PATH);
+  const acwiByDate = new Map(acwiRows.map(row => [row.date, row.close]));
+  for (const row of approvedUpdates) {
+    const existing = acwiByDate.get(row.date);
+    if (existing !== undefined && existing !== row.close) {
+      throw new Error(`Konflikt zwischen ACWI-Master und Update am ${row.date}.`);
+    }
+    acwiByDate.set(row.date, row.close);
+  }
+  const mergedAcwi = [...acwiByDate.entries()]
+    .map(([date, close]) => ({ date, close }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const vixRows = parseCsv(vixFile.content, VIX_MASTER_PATH);
+  const vixByDate = new Map(vixRows.map(row => [row.date, row.close]));
+
+  const points = [];
+  for (let i = 199; i < mergedAcwi.length; i++) {
+    const row = mergedAcwi[i];
+    const vix = vixByDate.get(row.date);
+    if (vix === undefined) continue;
+    const window = mergedAcwi.slice(i - 199, i + 1);
+    const sma200 = window.reduce((sum, item) => sum + item.close, 0) / 200;
+    points.push({
+      date: row.date,
+      acwi: row.close,
+      sma200: Number(sma200.toFixed(8)),
+      vix
+    });
+  }
+  const last50 = points.slice(-50);
+  if (last50.length < 30) {
+    throw new Error(`Für die Trenddarstellung liegen nur ${last50.length} gemeinsame Punkte vor; mindestens 30 werden benötigt.`);
+  }
+  return {
+    version: "intraday-vix-chart-history-v1",
+    available: true,
+    count: last50.length,
+    smaPeriod: 200,
+    firstDate: last50[0].date,
+    latestDate: last50[last50.length - 1].date,
+    points: last50
   };
 }
 
