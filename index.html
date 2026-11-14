@@ -10,13 +10,13 @@
 <body>
   <main class="container">
     <h1>Marktkompass – Testversion</h1>
-    <p class="note"><b>Getrennte Online-Testseite.</b> Diese Fassung liest den veröffentlichten Marktstatus und fragt einen aktuellen Intraday-VIX-Kandidaten nur lesend ab. Sie löst keine ACWI-Übernahme, Berechnung oder Veröffentlichung aus.</p>
+    <p class="note"><b>Getrennte Online-Testseite.</b> Diese getrennte Testfassung liest den veröffentlichten Marktstatus und bis zu 50 gemeinsame ACWI-/VIX-Handelstage einschließlich SMA200. Zusätzlich fragt sie einen Intraday-VIX-Kandidaten nur lesend ab und zeigt ihn als vorläufigen Messpunkt in einer gemeinsamen Trenddarstellung. Sie löst keine ACWI-Übernahme, V25.1-Berechnung oder Veröffentlichung aus.</p>
     <div id="app">Lade den letzten veröffentlichten Marktstatus …</div>
     <section class="card">
       <h2>Intraday-VIX – Live-Abfrage (nur lesend)</h2>
       <div id="intraday-preview-status" class="note" aria-live="polite">Beim Öffnen wird eine unverbindliche Leseabfrage gestartet.</div>
       <div id="intraday-preview-data"></div>
-      <p class="note">Ein angezeigter Kandidat ist noch nicht in die V25.1-Berechnung übernommen. Die reguläre gemeinsame ACWI-/VIX-Schlusskursveröffentlichung hat weiterhin Vorrang.</p>
+      <p class="note">Der Intraday-Kandidat wird ausschließlich in dieser Testdarstellung ergänzt, nicht in die V25.1-Berechnung übernommen. ACWI und SMA200 bleiben auf dem letzten regulären ACWI-Datenstand. Die reguläre gemeinsame ACWI-/VIX-Schlusskursveröffentlichung hat weiterhin Vorrang.</p>
     </section>
     <p class="note">Informations- und Beobachtungsinstrument – kein Kauf- oder Verkaufssignal. Die Testversion ist nicht die produktive Marktkompass-Seite.</p>
   </main>
