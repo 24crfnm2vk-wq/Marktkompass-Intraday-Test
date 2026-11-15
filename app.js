@@ -115,8 +115,11 @@ function renderMarketTrendChart(history, candidate, regularVix, statusDate) {
   }
 
   const intradayMark = intraday
-    ? '<line x1="'+x(intraday.time).toFixed(1)+'" y1="'+top+'" x2="'+x(intraday.time).toFixed(1)+'" y2="'+(top+plotHeight)+'" stroke="#7652a5" stroke-dasharray="4 4"/>'+
-      '<circle cx="'+x(intraday.time).toFixed(1)+'" cy="'+yVix(intraday.vix).toFixed(1)+'" r="5.5" fill="#7652a5" stroke="#fff" stroke-width="2"><title>Intraday-VIX '+intraday.vix.toFixed(2)+'</title></circle>'
+    ? '<line x1="'+x(intraday.time).toFixed(1)+'" y1="'+top+'" x2="'+x(intraday.time).toFixed(1)+'" y2="'+(top+plotHeight)+'" stroke="#7652a5" stroke-width="1.6" stroke-dasharray="4 4"/>'+
+      '<circle cx="'+x(intraday.time).toFixed(1)+'" cy="'+yVix(intraday.vix).toFixed(1)+'" r="12" fill="#7652a5" opacity="0.18"/>'+
+      '<circle cx="'+x(intraday.time).toFixed(1)+'" cy="'+yVix(intraday.vix).toFixed(1)+'" r="8" fill="#7652a5" stroke="#fff" stroke-width="3"><title>Intraday-VIX '+intraday.vix.toFixed(2)+'</title></circle>'+
+      '<circle cx="'+x(intraday.time).toFixed(1)+'" cy="'+yVix(intraday.vix).toFixed(1)+'" r="3" fill="#fff"/>'+
+      '<text x="'+(x(intraday.time)-13).toFixed(1)+'" y="'+(yVix(intraday.vix)-13).toFixed(1)+'" text-anchor="end" font-size="12" font-weight="700" fill="#7652a5" stroke="#fff" stroke-width="3" paint-order="stroke">Intraday '+intraday.vix.toFixed(2)+'</text>'
     : "";
   const fmtDate = t => new Date(t).toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit",year:"numeric"});
   const latest = points[points.length-1];
