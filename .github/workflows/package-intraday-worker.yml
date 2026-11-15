@@ -18,11 +18,11 @@ jobs:
         run: node --check worker-intraday-test.js
       - name: Verify read-only restrictions
         run: |
-          # GitHub App installation tokens require one POST request.
-          # This request grants contents:read only; it does not write repository data.
-          test "$(grep -c 'method: "POST"' worker-intraday-test.js)" -eq 1
-          grep -Fq '/access_tokens' worker-intraday-test.js
-          grep -Fq 'permissions: { contents: "read" }' worker-intraday-test.js
+          # Both GitHub helper paths independently create an installation token.
+          # Each POST is restricted to contents:read; neither writes repository data.
+          test "$(grep -c 'method: "POST"' worker-intraday-test.js)" -eq 2
+          test "$(grep -c '/access_tokens' worker-intraday-test.js)" -eq 2
+          test "$(grep -c 'permissions: { contents: "read" }' worker-intraday-test.js)" -eq 2
           ! grep -Eq 'dispatchPublishWorkflow|workflow_dispatch' worker-intraday-test.js
           ! grep -Eq 'method: "(PUT|PATCH|DELETE)"' worker-intraday-test.js
           grep -Fq 'market["^VIX"]' worker-intraday-test.js
