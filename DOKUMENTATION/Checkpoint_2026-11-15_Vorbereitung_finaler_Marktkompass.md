@@ -156,3 +156,21 @@ Es sind derzeit keine Änderungen durch den Nutzer in GitHub, VS Code oder Cloud
 **Produktivsystem:** Unverändert und nicht zur Integration freigegeben.
 
 Dieser Checkpoint ist ab dem 15.11.2026 die maßgebliche Fortsetzungsgrundlage. Er ergänzt den Checkpoint vom 14.11.2026 und hat bei abweichenden Aussagen Vorrang.
+
+
+## 10. Ergänzende Nutzerentscheidung – Berechtigungsmodell (15.11.2026)
+
+Der Nutzer hat das vorgeschlagene Nutzungskonzept ausdrücklich bestätigt:
+
+- Der Marktkompass ist grundsätzlich ein persönliches System des Nutzers.
+- Eine spätere, optionale Freigabe für höchstens zwei bis vier weitere Familienmitglieder soll technisch möglich sein.
+- Familienmitglieder erhalten ausschließlich Lese- und Nutzungsrechte.
+- Familienmitglieder erhalten keinerlei administrative Berechtigungen.
+- Sie dürfen insbesondere keine Berechnungsregeln, Systemeinstellungen, Datenquellen, Programmdateien oder Veröffentlichungen verändern.
+- Administrations- und Freigaberechte verbleiben ausschließlich beim Nutzer.
+- Die Familienzugänge werden zum jetzigen Zeitpunkt noch nicht eingerichtet. Die Möglichkeit wird lediglich bei der Planung der Sicherheitsarchitektur berücksichtigt.
+- Jeder mögliche Familienzugang soll später einzeln zuweisbar und bei Bedarf einzeln widerrufbar sein; gemeinsame Zugangsdaten für mehrere Personen sind nicht vorgesehen.
+
+**Verbindliche Leitlinie:** Persönliche Nutzung durch den Eigentümer mit optionalen, individuell kontrollierten Nur-Lese-/Nutzungszugängen für maximal vier Familienmitglieder. Keine administrativen Rechte außerhalb des Eigentümerzugangs.
+
+Diese Ergänzung dokumentiert eine Planungsentscheidung. Sie ist weder eine Freigabe zur technischen Umsetzung noch eine abgeschlossene Sicherheitsprüfung.
