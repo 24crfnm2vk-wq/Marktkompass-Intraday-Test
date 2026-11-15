@@ -177,7 +177,7 @@ async function getIntradayMarketState(env) {
   };
 
   const acwiDates = parseDates(acwiFile.content, ACWI_MASTER_PATH);
-  for (const row of approvedRows) {
+  for (const row of approvedUpdates) {
     const existingClose = acwiDates.get(row.date);
 
     if (existingClose !== undefined && existingClose !== row.close) {
