@@ -317,7 +317,7 @@ async function getChartHistory(env) {
 
   const acwiRows = parseCsv(acwiFile.content, ACWI_MASTER_PATH);
   const acwiByDate = new Map(acwiRows.map(row => [row.date, row.close]));
-  for (const row of approvedUpdates) {
+  for (const row of approvedRows) {
     const existing = acwiByDate.get(row.date);
     if (existing !== undefined && existing !== row.close) {
       throw new Error(`Konflikt zwischen ACWI-Master und Update am ${row.date}.`);
