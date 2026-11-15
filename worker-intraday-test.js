@@ -524,7 +524,7 @@ async function githubGetFilesWithSha(env, paths) {
     if (!response.ok) throw new Error(`GitHub konnte ${path} nicht lesen (${response.status}).`);
     const value = await response.json();
     if (!value.content || !value.sha) throw new Error(`GitHub-Antwort für ${path} ist unvollständig.`);
-    return { sha: value.sha, content: value.content.replace(/\\n/g, "") };
+    return { sha: value.sha, content: value.content.replace(/\n/g, "") };
   }));
 }
 
