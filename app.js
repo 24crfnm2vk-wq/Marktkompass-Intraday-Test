@@ -23,19 +23,30 @@ const INTRADAY_WORKER = "https://marktkompass-intraday-test.24crfnm2vk.workers.d
 
 async function loadTrendData() {
   const worker = INTRADAY_WORKER;
-  const requests = await Promise.allSettled([
-    fetch(`${worker}/chart-history?t=${Date.now()}`, { cache: "no-store" }),
-    fetch(`${worker}/intraday-candidate?t=${Date.now()}`, { cache: "no-store" })
-  ]);
-  let history = null;
-  let candidate = null;
-  if (requests[0].status === "fulfilled" && requests[0].value.ok) {
-    history = await requests[0].value.json().catch(() => null);
-  }
-  if (requests[1].status === "fulfilled" && requests[1].value.ok) {
-    candidate = await requests[1].value.json().catch(() => null);
-  }
-  return { history, candidate };
+  const urls = [
+    `${worker}/chart-history?t=${Date.now()}`,
+    `${worker}/intraday-candidate?t=${Date.now()}`
+  ];
+  const requests = await Promise.allSettled(urls.map(url =>
+    fetch(url, { cache: "no-store" }).then(async response => ({
+      ok: response.ok,
+      status: response.status,
+      data: await response.json().catch(() => null)
+    }))
+  ));
+  const unpack = result => result.status === "fulfilled"
+    ? result.value
+    : { ok: false, status: "Netzwerk/CORS", error: String(result.reason) };
+  const historyResult = unpack(requests[0]);
+  const candidateResult = unpack(requests[1]);
+  return {
+    history: historyResult.data || null,
+    candidate: candidateResult.data || null,
+    diagnostics: {
+      history: historyResult.ok ? "OK" : `${historyResult.status}: ${historyResult.error || historyResult.data?.error || historyResult.data?.message || "keine gültige Antwort"}`,
+      candidate: candidateResult.ok ? "OK" : `${candidateResult.status}: ${candidateResult.error || candidateResult.data?.error || candidateResult.data?.message || "keine gültige Antwort"}`
+    }
+  };
 }
 
 function formatIntradayTime(value) {
@@ -47,7 +58,8 @@ function formatIntradayTime(value) {
 
 function renderMarketTrendChart(history, candidate, regularVix, statusDate) {
   if (history?.available !== true || !Array.isArray(history.points)) {
-    return '<div class="card"><b>Marktverlauf</b><p class="note">Die gemeinsame Trenddarstellung ist derzeit nicht verfügbar.</p></div>';
+    const reason = trendDataCache.diagnostics?.history || history?.error || history?.message || "Worker-Antwort ohne verfügbare Verlaufsdaten";
+    return '<div class="card"><b>Marktverlauf</b><p class="note">Die gemeinsame Trenddarstellung ist derzeit nicht verfügbar.</p><small>Technische Prüfung: '+String(reason).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))+'</small></div>';
   }
 
   const points = history.points.map(item => ({
@@ -152,7 +164,7 @@ async function loadStatus(){
     const intradayChange=intradayValid?((intradayValue/Number(s.vix))-1)*100:null;
     const intradayHtml=intradayValid
       ? '<div class="intraday-panel"><div class="intraday-heading">Ergänzende Intraday-Information</div><div class="intraday-row"><span>Intraday-VIX</span><strong>'+formatNumber(intradayValue)+' Punkte</strong></div><div class="intraday-row"><span>Abweichung zum letzten VIX-Schlusskurs</span><strong>'+formatPercent(intradayChange)+'</strong></div><div class="intraday-time">Anbieter-Zeitstempel: '+formatIntradayTime(candidate.timestamp)+'</div></div>'
-      : '<div class="intraday-panel intraday-unavailable"><div class="intraday-heading">Ergänzende Intraday-Information</div><div>Derzeit kein gültiger Intraday-Messpunkt verfügbar.</div></div>';
+      : '<div class="intraday-panel intraday-unavailable"><div class="intraday-heading">Ergänzende Intraday-Information</div><div>Derzeit kein gültiger Intraday-Messpunkt verfügbar.</div><small>Technische Prüfung: '+String(trendData.diagnostics?.candidate || candidate?.message || candidate?.error || "Keine gültige Worker-Antwort").replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))+'</small></div>';
     let reference='';
     const h=s.historicalReference;
     if(showReference&&h&&h.found===true){
