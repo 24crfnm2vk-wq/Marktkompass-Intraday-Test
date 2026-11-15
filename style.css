@@ -18,8 +18,53 @@ body{line-height:1.45}
 .phase-title{font-weight:700;margin:0 0 3px}.phase-description{margin:0;color:#333}.phase-label{font-size:.83rem;font-weight:700;letter-spacing:.03em;color:#666;margin-bottom:3px}
 @media(max-width:600px){.container{margin:0;padding:16px;border-radius:0}.phase-banner{gap:10px}.phase-icon{width:40px;height:40px;min-width:40px}}
 
-.vix-chart{display:block;width:100%;height:auto;margin-top:12px;overflow:visible}
-.chart-legend{display:flex;flex-wrap:wrap;gap:14px;margin:10px 0 6px;font-size:.82rem;color:#555}
-.chart-legend span{display:inline-flex;align-items:center;gap:6px}
-.chart-legend i{display:inline-block;width:17px;height:3px;background:#555;border-radius:2px}
-.chart-legend .legend-intraday{width:9px;height:9px;border:2px solid #222;border-radius:50%;background:#888}
+
+/* Ergänzende Intraday-Anzeige und responsive Verlaufsgrafik */
+.intraday-panel{
+  margin:14px 0 2px;
+  padding:12px 14px;
+  border-left:4px solid #7652a5;
+  border-radius:7px;
+  background:#f5f1fa;
+  color:#342747;
+}
+.intraday-heading{
+  margin-bottom:7px;
+  color:#7652a5;
+  font-size:.88rem;
+  font-weight:700;
+}
+.intraday-row{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+  margin:5px 0;
+}
+.intraday-row strong{
+  color:#7652a5;
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+.intraday-time{
+  margin-top:7px;
+  color:#62576f;
+  font-size:.78rem;
+}
+.intraday-unavailable{
+  color:#666;
+  background:#f4f4f4;
+  border-left-color:#999;
+}
+.intraday-unavailable .intraday-heading{color:#666}
+.market-trend-card{overflow:hidden}
+.market-chart{max-width:100%;height:auto;touch-action:pan-y}
+@media(max-width:600px){
+  .intraday-row{align-items:flex-start;flex-direction:column;gap:2px}
+  .intraday-row strong{text-align:left}
+  .intraday-panel{padding:11px}
+  .chart-legend{gap:9px;font-size:.76rem}
+}
+
+
+.test-note { margin: 0 0 16px; padding: 8px 10px; border-left: 3px solid #7652a5; background: #f6f2fa; color: #514263; font-size: 13px; }
