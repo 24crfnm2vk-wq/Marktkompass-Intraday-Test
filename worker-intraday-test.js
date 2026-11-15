@@ -7,6 +7,8 @@ const OWNER = "24crfnm2vk-wq";
 const REPO = "H1-Pruefstand";
 const APPROVED_PATH = "data/market-data/msci_acwi_approved_update.json";
 const INTRADAY_CACHE_KEY = "marktkompass:intraday-vix:test:start-check:v1";
+const CHART_HISTORY_CACHE_KEY = "marktkompass:intraday-vix:test:chart-history:v1";
+const CHART_HISTORY_CACHE_TTL_SECONDS = 15 * 60;
 const INTRADAY_COOLDOWN_MS = 15 * 60 * 1000;
 const INTRADAY_CACHE_TTL_SECONDS = 15 * 60;
 
@@ -175,7 +177,7 @@ async function getIntradayMarketState(env) {
   };
 
   const acwiDates = parseDates(acwiFile.content, ACWI_MASTER_PATH);
-  for (const row of approvedUpdates) {
+  for (const row of approvedRows) {
     const existingClose = acwiDates.get(row.date);
 
     if (existingClose !== undefined && existingClose !== row.close) {
@@ -254,13 +256,40 @@ async function getIntradayMarketState(env) {
 }
 
 async function getChartHistory(env) {
+  const cache = env.INTRADAY_CACHE;
+  if (!cache || typeof cache.get !== "function" || typeof cache.put !== "function") {
+    throw new Error("Cloudflare-KV-Binding INTRADAY_CACHE fehlt oder ist unvollständig.");
+  }
+  const cached = await cache.get(CHART_HISTORY_CACHE_KEY, "json");
+  if (cached?.version === "intraday-vix-chart-history-v1" &&
+      cached.available === true && Array.isArray(cached.points) && cached.points.length >= 30) {
+    return { ...cached, cacheHit: true };
+  }
+
   const ACWI_MASTER_PATH = "data/market-data/msci_acwi_daily_clean.csv";
   const VIX_MASTER_PATH = "data/market-data/vix_daily_clean.csv";
-  const [acwiFile, vixFile, approvedUpdates] = await Promise.all([
-    githubGetFileWithSha(env, ACWI_MASTER_PATH),
-    githubGetFileWithSha(env, VIX_MASTER_PATH),
-    readApprovedAcwiUpdates(env)
+  const [acwiFile, vixFile, approvedUpdates] = await githubGetFilesWithSha(env, [
+    ACWI_MASTER_PATH, VIX_MASTER_PATH, APPROVED_PATH
   ]);
+  let approvedRows = [];
+  if (approvedUpdates) {
+    let payload;
+    try { payload = JSON.parse(base64ToUtf8(approvedUpdates.content)); }
+    catch { throw new Error("Die gespeicherten ACWI-Update-Daten sind kein gültiges JSON."); }
+    if (payload?.version !== "acwi-approved-update-v1" || !Array.isArray(payload.data)) {
+      throw new Error("Die gespeicherten ACWI-Update-Daten haben ein ungültiges Format.");
+    }
+    approvedRows = payload.data.map(row => ({ date: String(row.date || "").trim(), close: Number(row.close) }));
+    let previous = null;
+    const seen = new Set();
+    for (const row of approvedRows) {
+      if (!isValidIsoDate(row.date) || !Number.isFinite(row.close) || row.close <= 0 ||
+          seen.has(row.date) || (previous !== null && row.date <= previous)) {
+        throw new Error("Die gespeicherten ACWI-Update-Daten sind ungültig oder nicht chronologisch sortiert.");
+      }
+      seen.add(row.date); previous = row.date;
+    }
+  }
   if (!acwiFile || !vixFile) {
     throw new Error("Reguläre ACWI-/VIX-Masterdaten fehlen.");
   }
@@ -302,32 +331,35 @@ async function getChartHistory(env) {
   const vixByDate = new Map(vixRows.map(row => [row.date, row.close]));
 
   const points = [];
-  for (let i = 199; i < mergedAcwi.length; i++) {
+  let rollingSum = 0;
+  for (let i = 0; i < mergedAcwi.length; i++) {
+    rollingSum += mergedAcwi[i].close;
+    if (i >= 200) rollingSum -= mergedAcwi[i - 200].close;
+    if (i < 199) continue;
     const row = mergedAcwi[i];
     const vix = vixByDate.get(row.date);
     if (vix === undefined) continue;
-    const window = mergedAcwi.slice(i - 199, i + 1);
-    const sma200 = window.reduce((sum, item) => sum + item.close, 0) / 200;
-    points.push({
-      date: row.date,
-      acwi: row.close,
-      sma200: Number(sma200.toFixed(8)),
-      vix
-    });
+    const sma200 = rollingSum / 200;
+    points.push({ date: row.date, acwi: row.close, sma200: Number(sma200.toFixed(8)), vix });
   }
   const last50 = points.slice(-50);
   if (last50.length < 30) {
     throw new Error(`Für die Trenddarstellung liegen nur ${last50.length} gemeinsame Punkte vor; mindestens 30 werden benötigt.`);
   }
-  return {
+  const result = {
     version: "intraday-vix-chart-history-v1",
     available: true,
     count: last50.length,
     smaPeriod: 200,
     firstDate: last50[0].date,
     latestDate: last50[last50.length - 1].date,
-    points: last50
+    points: last50,
+    cacheHit: false
   };
+  await env.INTRADAY_CACHE.put(CHART_HISTORY_CACHE_KEY, JSON.stringify(result), {
+    expirationTtl: CHART_HISTORY_CACHE_TTL_SECONDS
+  });
+  return result;
 }
 
 async function readApprovedAcwiUpdates(env) {
@@ -458,6 +490,42 @@ async function fetchIntradayVixCandidate(acwiDate) {
     .join("");
 
   return { id, vix, timestamp, acwiDate };
+}
+
+async function githubGetFilesWithSha(env, paths) {
+  const jwt = await createGitHubAppJwt(env);
+  const installation = await findInstallation(jwt);
+  const tokenResponse = await fetch(
+    `${GITHUB_API}/app/installations/${installation.id}/access_tokens`,
+    {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${jwt}`,
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": "Marktkompass-Bridge",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ permissions: { contents: "read" } })
+    }
+  );
+  if (!tokenResponse.ok) throw new Error(`GitHub-Token konnte nicht erzeugt werden (${tokenResponse.status}).`);
+  const token = (await tokenResponse.json()).token;
+  return Promise.all(paths.map(async path => {
+    const response = await fetch(`${GITHUB_API}/repos/${OWNER}/${REPO}/contents/${path}`, {
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": "Marktkompass-Bridge"
+      }
+    });
+    if (response.status === 404) return null;
+    if (!response.ok) throw new Error(`GitHub konnte ${path} nicht lesen (${response.status}).`);
+    const value = await response.json();
+    if (!value.content || !value.sha) throw new Error(`GitHub-Antwort für ${path} ist unvollständig.`);
+    return { sha: value.sha, content: value.content.replace(/\\n/g, "") };
+  }));
 }
 
 async function githubGetFileWithSha(env, path) {
